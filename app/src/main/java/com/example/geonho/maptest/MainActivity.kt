@@ -1,5 +1,6 @@
 package com.example.geonho.maptest
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.location.LocationListener
@@ -25,12 +26,24 @@ class MainActivity : AppCompatActivity(),EasyPermissions.PermissionCallbacks{
 
     private lateinit var locationManager: LocationManager
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if(EasyPermissions.hasPermissions(this,android.Manifest.permission.ACCESS_FINE_LOCATION)){
+            setMapView()
+        }else{
+            requestPermission()
+        }
+    }
+
     private val mLocationListener : LocationListener = object : LocationListener{
         override fun onLocationChanged(location: Location) {
             lat = location.latitude
             lon = location.longitude
-            Log.d("test",location.latitude.toString())
-            Log.d("test",location.longitude.toString())
+            Log.d("abcd",location.latitude.toString())
+            Log.d("abcd",location.longitude.toString())
             daumMapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(lat,lon),true)
 
             //마커
@@ -57,16 +70,9 @@ class MainActivity : AppCompatActivity(),EasyPermissions.PermissionCallbacks{
 
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if(EasyPermissions.hasPermissions(this,android.Manifest.permission.ACCESS_FINE_LOCATION)){
-            setMapView()
-        }else{
-            requestPermission()
-        }
+    override fun onResume() {
+        super.onResume()
+        requestLocation()
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
@@ -88,7 +94,7 @@ class MainActivity : AppCompatActivity(),EasyPermissions.PermissionCallbacks{
 
     private fun setMapView(){
         try{
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,6000,1f,mLocationListener)
+            requestLocation()
         }catch (e: SecurityException){
             requestPermission()
         }
@@ -96,5 +102,11 @@ class MainActivity : AppCompatActivity(),EasyPermissions.PermissionCallbacks{
         mapContainer = mapView as ViewGroup
         mapContainer.addView(daumMapView)
 
+    }
+
+    @SuppressLint("MissingPermission")
+    fun requestLocation() {
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0f, mLocationListener)
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0f, mLocationListener)
     }
 }
